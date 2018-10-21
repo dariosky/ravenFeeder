@@ -1,5 +1,6 @@
 $(function () {
-  let updateTimer //debounced timer on changes
+  let updateTimer, //debounced timer on changes
+    lockUpdates = false
 
 
   function initialize() {
@@ -21,13 +22,29 @@ $(function () {
 
   function updatePosts() {
     console.log('Updating posts ****')
-    $('.tpl-post-list .item').each((_, item) => {
+    lockUpdates = true
+    $('#post-upgrade_post').remove()
+    let $listContainer = $('.tpl-post-list')
+    $listContainer.css('background', 'red')
+    $listContainer.find('.item').each((_, item) => {
       const $item = $(item),
         $title = $item.find('.item-title--text'),
         text = $title.text()
-      console.log('title', text)
+      // strip the initial RE: from the text
       if (text.startsWith('RE: ')) $title.text(text.substr(4))
     })
+
+    const sortingFunction = (a, b) => {
+      const titleA = $(a).find('.item-title--text').text(),
+        titleB = $(b).find('.item-title--text').text()
+      return titleA < titleB ? -1 : 1
+    }
+    const children = $listContainer.find('.list-item').get() // array of children
+    children.sort(sortingFunction)
+    $listContainer.append(children)
+    setTimeout(() => { // unlock updates from text tick
+      lockUpdates = false
+    }, 0)
   }
 
   function watchChanges() {
@@ -40,11 +57,21 @@ $(function () {
         subtree: true,
       },
       callback = function (mutationsList, observer) {
+        if (lockUpdates) return
         mutationsList.forEach(mutation => {
           if (mutation.type === 'childList') {
-            console.log('A child node has been added or removed.', mutation)
+            mutation.addedNodes.forEach(node => {
+              const nodeClasses = node.classList
+              if (nodeClasses &&
+                (nodeClasses.contains('list-item')
+                  || nodeClasses.contains('tpl-post-list'))) {
+                clearTimeout(updateTimer)
+                updateTimer = setTimeout(updatePosts, 300)
+              }
+            })
+            // console.log('A child node has been added or removed.', mutation)
           } else if (mutation.type === 'attributes') {
-            console.log('The ' + mutation.attributeName + ' attribute was modified.')
+            // console.log('The ' + mutation.attributeName + ' attribute was modified.')
           }
         })
       },
