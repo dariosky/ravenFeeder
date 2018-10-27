@@ -1,0 +1,16 @@
+.issueHeader {
+	display: flex;
+	padding: 5px;
+}
+
+.issueNumber {
+	display: inline-block;
+	white-space: nowrap;
+	margin-right: 5px;
+	align-self: center;
+}
+
+.issueTitle {
+	display: inline-block;
+	font-size: 12px;
+}

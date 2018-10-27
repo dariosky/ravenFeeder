@@ -2,54 +2,93 @@ $(function () {
   let updateTimer, //debounced timer on changes
     lockUpdates = false
 
-
   function initialize() {
     const logoUrl = chrome.runtime.getURL('images/rprss128.png')
-    $('.feeder-logo').css({
-      backgroundImage: `url(${logoUrl})`,
-      backgroundSize: 'contain',
-      height: '60px',
-      color: 'white',
-      'text-align': 'center',
-      'background-position': 'left',
-      'line-height': '60px',
-      'text-indent': '15px',
-    })
+    $('.feeder-logo')
+      .css({
+        backgroundImage: `url(${logoUrl})`,
+        backgroundSize: 'contain',
+        height: '60px',
+        color: 'white',
+        'text-align': 'center',
+        'background-position': 'left',
+        'line-height': '60px',
+        'text-indent': '15px',
+      })
       .text('RavenPack Feed')
 
     $('.MoreFeatures').remove()
   }
 
   function updatePosts() {
-    console.log('Updating posts ****')
     lockUpdates = true
-    $('#post-upgrade_post').remove()
-    let $listContainer = $('.tpl-post-list')
-    $listContainer.css('background', 'red')
-    $listContainer.find('.item').each((_, item) => {
-      const $item = $(item),
-        $title = $item.find('.item-title--text'),
-        text = $title.text()
-      // strip the initial RE: from the text
-      if (text.startsWith('RE: ')) $title.text(text.substr(4))
-    })
+    console.log('Updating posts ****')
 
-    const sortingFunction = (a, b) => {
-      const titleA = $(a).find('.item-title--text').text(),
-        titleB = $(b).find('.item-title--text').text()
-      return titleA < titleB ? -1 : 1
-    }
-    const children = $listContainer.find('.list-item').get() // array of children
-    children.sort(sortingFunction)
-    $listContainer.append(children)
-    setTimeout(() => { // unlock updates from text tick
+    // the bottom ad post is added all the time - then - remove it all the time
+    $('.popup-container').attr('style', 'height: auto !important; width: 450px;')
+    $('#post-upgrade_post').remove()
+
+    const $listContainer = $('.tpl-post-list'),
+      $listItems = $listContainer.find('.list-item'),// array of listItems
+      issueBlocks = [],
+      issueMaps = {}
+    let
+      commentsCount = 0
+
+    $listItems.each(
+      (_, listItem) => {
+        const
+          $listItem = $(listItem),
+          $item = $listItem.find('.item'),
+          $itemText = $item.find('.item-title--text'),
+          $text = $itemText.text(),
+          issueGroups = $text.match(/^RE: \[(.*)] (.*)/)
+        if (issueGroups) {
+          commentsCount++
+          const [_, issue, title] = issueGroups
+
+          $itemText.remove() // get rid of the title
+          $item.find('.item-sub-title').remove()
+
+          if (!issueMaps[issue]) {
+            issueMaps[issue] = {
+              issue,
+              title,
+              children: [],
+            }
+            issueBlocks.push(issueMaps[issue])//keep the ordered list
+          }
+          issueMaps[issue].children.push($listItem)
+          $listItem.removeClass('even odd') // after sorting zebra would be random
+          // console.log(issue, title)
+        }
+      },
+    )
+    console.info(`${commentsCount} comments on ${issueBlocks.length} issues`)
+
+    $listContainer.empty()
+    $listContainer.append(issueBlocks.map(
+      block => $('<div/>')
+        .addClass('issue')
+        .append(
+          $('<div/>').addClass('issueHeader').append(
+            $(`<div class="issueNumber">${block.issue}</div>`),
+            $(`<div class="issueTitle">${block.title}</div>`),
+          ),
+          block.children,
+        ),
+    ))
+
+    setTimeout(() => {
+      // unlock updates from text tick
       lockUpdates = false
     }, 0)
   }
 
+
   function watchChanges() {
-    const
-      MutationObserver = window.MutationObserver || window.WebKitMutationObserver,
+    const MutationObserver =
+      window.MutationObserver || window.WebKitMutationObserver,
       rootNode = $('.post-list-container').get(0),
       config = {
         attributes: true,
@@ -62,14 +101,16 @@ $(function () {
           if (mutation.type === 'childList') {
             mutation.addedNodes.forEach(node => {
               const nodeClasses = node.classList
-              if (nodeClasses &&
-                (nodeClasses.contains('list-item')
-                  || nodeClasses.contains('tpl-post-list'))) {
-                clearTimeout(updateTimer)
-                updateTimer = setTimeout(updatePosts, 300)
+              if (
+                nodeClasses &&
+                (nodeClasses.contains('list-item') ||
+                  nodeClasses.contains('tpl-post-list'))
+              ) {
+                clearTimeout(updateTimer) //debounced
+                updateTimer = setTimeout(updatePosts, 100)
               }
             })
-            // console.log('A child node has been added or removed.', mutation)
+            // console.log ('A child node has been added or removed.', mutation);
           } else if (mutation.type === 'attributes') {
             // console.log('The ' + mutation.attributeName + ' attribute was modified.')
           }
@@ -79,7 +120,6 @@ $(function () {
 
     observer.observe(rootNode, config)
   }
-
 
   initialize()
   watchChanges()
