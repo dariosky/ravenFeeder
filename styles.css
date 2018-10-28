@@ -1,6 +1,35 @@
 .issueHeader {
 	display: flex;
 	padding: 5px;
+	position: relative;
+	height: 4em;
+	cursor: pointer; /* links to the issue */
+}
+
+.issueHeader:hover .mark-all-as-read {
+	display: block
+}
+
+.issueCommands {
+	display: none;
+	position: absolute;
+	right: 5px;
+	top: 0;
+	height: 100%;
+
+}
+
+.issueCommands .tpl-count-group {
+	top: calc(50% - 1em - 6px);
+	background: none !important;
+}
+
+.issueCommands .mark-all-as-read {
+	padding: 5px !important;
+}
+
+.issueHeader:hover .issueCommands {
+	display: block;
 }
 
 .issueNumber {
@@ -12,5 +41,6 @@
 
 .issueTitle {
 	display: inline-block;
+	align-self: center;
 	font-size: 12px;
 }

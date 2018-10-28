@@ -2,6 +2,21 @@ $(function () {
   let updateTimer, //debounced timer on changes
     lockUpdates = false
 
+  function markAllAsRead(e) {
+    const $issue = $(e.target).closest('.issue'),
+      $commentMarks = $issue.find('.mark-as-read:not(.mark-all-as-read)')
+    console.info(`Mark ${$commentMarks.length} as read`)
+    e.stopPropagation()
+    $commentMarks.click()
+  }
+
+  function goToFirstComment(e) {
+    console.info('Go to first comment')
+    const $issue = $(e.target).closest('.issue'),
+      $first = $issue.find('.item-title').first()
+    $first.click()
+  }
+
   function initialize() {
     const logoUrl = chrome.runtime.getURL('images/rprss128.png')
     $('.feeder-logo')
@@ -18,11 +33,15 @@ $(function () {
       .text('RavenPack Feed')
 
     $('.MoreFeatures').remove()
+
+    $('body')
+      .on('click', '.issueHeader .mark-all-as-read', markAllAsRead)
+      .on('click', '.issueHeader', goToFirstComment)
   }
 
   function updatePosts() {
     lockUpdates = true
-    console.log('Updating posts ****')
+    console.info('Updating posts ****')
 
     // the bottom ad post is added all the time - then - remove it all the time
     $('.popup-container').attr('style', 'height: auto !important; width: 450px;')
@@ -67,6 +86,7 @@ $(function () {
     console.info(`${commentsCount} comments on ${issueBlocks.length} issues`)
 
     $listContainer.empty()
+
     $listContainer.append(issueBlocks.map(
       block => $('<div/>')
         .addClass('issue')
@@ -74,6 +94,13 @@ $(function () {
           $('<div/>').addClass('issueHeader').append(
             $(`<div class="issueNumber">${block.issue}</div>`),
             $(`<div class="issueTitle">${block.title}</div>`),
+            $('<div class="issueCommands">' +
+              '  <div class="tpl-count-group">' +
+              '    <div class="mark-as-read mark-all-as-read green-button--extra">' +
+              '      All read ✔' +
+              '    </div>' +
+              '  </div>' +
+              '</div>'),
           ),
           block.children,
         ),
