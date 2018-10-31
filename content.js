@@ -1,17 +1,18 @@
 $(function () {
   let updateTimer, //debounced timer on changes
-    lockUpdates = false
+    lockUpdates = false,
+    colorStyles = 'background: #AAF; color: #333'
 
   function markAllAsRead(e) {
     const $issue = $(e.target).closest('.issue'),
       $commentMarks = $issue.find('.mark-as-read:not(.mark-all-as-read)')
-    console.info(`Mark ${$commentMarks.length} as read`)
+    console.info(`%cMark ${$commentMarks.length} as read`, colorStyles)
     e.stopPropagation()
     $commentMarks.click()
   }
 
   function goToFirstComment(e) {
-    console.info('Go to first comment')
+    console.info('%cGo to first comment', colorStyles)
     const $issue = $(e.target).closest('.issue'),
       $first = $issue.find('.item-title').first()
     $first.click()
@@ -41,7 +42,7 @@ $(function () {
 
   function updatePosts() {
     lockUpdates = true
-    console.info('Updating posts ****')
+    console.info('%cUpdating posts ****', colorStyles)
 
     // the bottom ad post is added all the time - then - remove it all the time
     $('.popup-container').attr('style', 'height: auto !important; width: 450px;')
@@ -83,9 +84,10 @@ $(function () {
         }
       },
     )
-    console.info(`${commentsCount} comments on ${issueBlocks.length} issues`)
+    console.info(`%c${commentsCount} comments on ${issueBlocks.length} issues`,
+      colorStyles)
 
-    $listContainer.empty()
+    // $listContainer.empty()
 
     $listContainer.append(issueBlocks.map(
       block => $('<div/>')
