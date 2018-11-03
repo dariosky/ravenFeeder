@@ -1,7 +1,8 @@
 $(function () {
   let updateTimer, //debounced timer on changes
     lockUpdates = false,
-    colorStyles = 'background: #AAF; color: #333'
+    colorStyles = 'background: #AAF; color: #333; padding:5px;',
+    logDOMchanges = false
 
   function markAllAsRead(e) {
     const $issue = $(e.target).closest('.issue'),
@@ -41,7 +42,6 @@ $(function () {
   }
 
   function updatePosts() {
-    lockUpdates = true
     console.info('%cUpdating posts ****', colorStyles)
 
     // the bottom ad post is added all the time - then - remove it all the time
@@ -61,8 +61,8 @@ $(function () {
           $listItem = $(listItem),
           $item = $listItem.find('.item'),
           $itemText = $item.find('.item-title--text'),
-          $text = $itemText.text(),
-          issueGroups = $text.match(/^RE: \[(.*)] (.*)/)
+          text = $itemText.text(),
+          issueGroups = text.match(/^RE: \[(.*)] (.*)/)
         if (issueGroups) {
           commentsCount++
           const [_, issue, title] = issueGroups
@@ -90,23 +90,29 @@ $(function () {
     // $listContainer.empty()
 
     $listContainer.append(issueBlocks.map(
-      block => $('<div/>')
-        .addClass('issue')
-        .append(
-          $('<div/>').addClass('issueHeader').append(
-            $(`<div class="issueNumber">${block.issue}</div>`),
-            $(`<div class="issueTitle">${block.title}</div>`),
-            $('<div class="issueCommands">' +
-              '  <div class="tpl-count-group">' +
-              '    <div class="mark-as-read mark-all-as-read green-button--extra">' +
-              '      All read ✔' +
-              '    </div>' +
-              '  </div>' +
-              '</div>'),
-          ),
-          block.children,
-        ),
-    ))
+      block => {
+        let $parent = $listContainer.find(`.issue[data-issue='${block.issue}']`)
+        if (!$parent.length) {
+          $parent = $('<div/>')
+            .addClass('issue')
+            .data('issue', block.issue)
+            .append(
+              $('<div/>').addClass('issueHeader').append(
+                $(`<div class="issueNumber">${block.issue}</div>`),
+                $(`<div class="issueTitle">${block.title}</div>`),
+                $('<div class="issueCommands">' +
+                  '  <div class="tpl-count-group">' +
+                  '    <div class="mark-as-read mark-all-as-read green-button--extra">' +
+                  '      All read ✔' +
+                  '    </div>' +
+                  '  </div>' +
+                  '</div>'),
+              ),
+            )
+        }
+        $parent.append(block.children)
+        return $parent // return to append in the $listContainer
+      }))
 
     setTimeout(() => {
       // unlock updates from text tick
@@ -118,30 +124,44 @@ $(function () {
   function watchChanges() {
     const MutationObserver =
       window.MutationObserver || window.WebKitMutationObserver,
-      rootNode = $('.post-list-container').get(0),
+      rootNode = $('.consume-popup').get(0),
       config = {
         attributes: true,
         childList: true,
         subtree: true,
       },
       callback = function (mutationsList, observer) {
-        if (lockUpdates) return
+        function updatePostsDebounced() {
+          clearTimeout(updateTimer) //debounced
+          lockUpdates = true
+          updateTimer = setTimeout(updatePosts, 100)
+        }
+
         mutationsList.forEach(mutation => {
           if (mutation.type === 'childList') {
-            mutation.addedNodes.forEach(node => {
-              const nodeClasses = node.classList
-              if (
-                nodeClasses &&
-                (nodeClasses.contains('list-item') ||
-                  nodeClasses.contains('tpl-post-list'))
-              ) {
-                clearTimeout(updateTimer) //debounced
-                updateTimer = setTimeout(updatePosts, 100)
-              }
-            })
-            // console.log ('A child node has been added or removed.', mutation);
+            if (logDOMchanges) {
+              console.log(
+                `DOM change: ${mutation.addedNodes.length} added, ${mutation.removedNodes.length} removed.`, mutation,
+              )
+            }
+            if (mutation.target.classList.contains('post-list-container')) {
+              updatePostsDebounced()
+            } else {
+              mutation.addedNodes.forEach(node => {
+                const nodeClasses = node.classList
+                if (
+                  nodeClasses &&
+                  (nodeClasses.contains('list-item') ||
+                    nodeClasses.contains('tpl-post-list'))
+                ) {
+                  updatePostsDebounced()
+                }
+              })
+            }
           } else if (mutation.type === 'attributes') {
-            // console.log('The ' + mutation.attributeName + ' attribute was modified.')
+            if (logDOMchanges) {
+              console.log('The ' + mutation.attributeName + ' attribute was modified.')
+            }
           }
         })
       },
