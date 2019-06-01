@@ -39,87 +39,100 @@ $(function () {
     $('body')
       .on('click', '.issueHeader .mark-all-as-read', markAllAsRead)
       .on('click', '.issueHeader', goToFirstComment)
+      .on('keypress',
+        function (e) {
+          console.log('eating keydown')
+          e.preventDefault()
+          e.stopPropagation()
+        })
   }
 
   function updatePosts() {
     console.info('%cUpdating posts ****', colorStyles)
 
     // the bottom ad post is added all the time - then - remove it all the time
-    $('.popup-container').attr('style', 'height: auto !important; width: 450px;')
+    $('.popup-container').attr(
+      'style',
+      'height: auto !important; width: 450px;',
+    )
     $('#post-upgrade_post').remove()
 
     const $listContainer = $('.tpl-post-list'),
-      $listItems = $listContainer.find('.list-item'),// array of listItems
+      $listItems = $listContainer.find('.list-item'), // array of listItems
       issueBlocks = [],
       issueMaps = {}
-    let
-      commentsCount = 0
+    let commentsCount = 0
 
-    $listItems.each(
-      (_, listItem) => {
-        const
-          $listItem = $(listItem),
-          $item = $listItem.find('.item'),
-          $itemText = $item.find('.item-title--text'),
-          text = $itemText.text(),
-          issueGroups = text.match(/^RE: \[(.*)] (.*)/)
-        if (issueGroups) {
-          commentsCount++
-          const [_, issue, title] = issueGroups
+    $listItems.each((_, listItem) => {
+      const $listItem = $(listItem),
+        $item = $listItem.find('.item'),
+        $itemText = $item.find('.item-title--text'),
+        text = $itemText.text(),
+        issueGroups = text.match(/^RE: \[(.*)] (.*)/)
+      if (issueGroups) {
+        commentsCount++
+        const [_, issue, title] = issueGroups
 
-          $itemText.remove() // get rid of the title
-          $item.find('.item-sub-title').remove()
+        $itemText.remove() // get rid of the title
+        $item.find('.item-sub-title').remove()
 
-          if (!issueMaps[issue]) {
-            issueMaps[issue] = {
-              issue,
-              title,
-              children: [],
-            }
-            issueBlocks.push(issueMaps[issue])//keep the ordered list
+        if (!issueMaps[issue]) {
+          issueMaps[issue] = {
+            issue,
+            title,
+            children: [],
           }
-          issueMaps[issue].children.push($listItem)
-          $listItem.removeClass('even odd') // after sorting zebra would be random
-          // console.log(issue, title)
+          issueBlocks.push(issueMaps[issue]) //keep the ordered list
         }
-      },
+        issueMaps[issue].children.push($listItem)
+        $listItem.removeClass('even odd') // after sorting zebra would be random
+        // console.log(issue, title)
+      }
+    })
+    console.info(
+      `%c${commentsCount} comments on ${issueBlocks.length} issues`,
+      colorStyles,
     )
-    console.info(`%c${commentsCount} comments on ${issueBlocks.length} issues`,
-      colorStyles)
 
     // $listContainer.empty()
 
-    $listContainer.append(issueBlocks.map(
-      block => {
-        let $parent = $listContainer.find(`.issue[data-issue='${block.issue}']`)
+    $listContainer.append(
+      issueBlocks.map(block => {
+        let $parent = $listContainer.find(
+          `.issue[data-issue='${block.issue}']`,
+        )
         if (!$parent.length) {
           $parent = $('<div/>')
             .addClass('issue')
             .data('issue', block.issue)
             .append(
-              $('<div/>').addClass('issueHeader').append(
-                $(`<div class="issueNumber">${block.issue}</div>`),
-                $(`<div class="issueTitle">${block.title}</div>`),
-                $('<div class="issueCommands">' +
-                  '  <div class="tpl-count-group">' +
-                  '    <div class="mark-as-read mark-all-as-read green-button--extra">' +
-                  '      All read ✔' +
-                  '    </div>' +
-                  '  </div>' +
-                  '</div>'),
-              ),
+              $('<div/>')
+                .addClass('issueHeader')
+                .append(
+                  $(`<div class="issueNumber">${block.issue}</div>`),
+                  $(`<div class="issueTitle">${block.title}</div>`),
+                  $(
+                    '<div class="issueCommands">' +
+                    '  <div class="tpl-count-group">' +
+                    '    <div class="mark-as-read mark-all-as-read green-button--extra">' +
+                    '      All read ✔' +
+                    '    </div>' +
+                    '  </div>' +
+                    '</div>',
+                  ),
+                ),
             )
         }
         $parent.append(block.children)
         return $parent // return to append in the $listContainer
-      }))
+      }),
+    )
 
     setTimeout(() => {
       // unlock updates from text tick
       lockUpdates = false
     }, 0)
   }
-
 
   function watchChanges() {
     const MutationObserver =
@@ -141,7 +154,8 @@ $(function () {
           if (mutation.type === 'childList') {
             if (logDOMchanges) {
               console.log(
-                `DOM change: ${mutation.addedNodes.length} added, ${mutation.removedNodes.length} removed.`, mutation,
+                `DOM change: ${mutation.addedNodes.length} added, ${mutation.removedNodes.length} removed.`,
+                mutation,
               )
             }
             if (mutation.target.classList.contains('post-list-container')) {
@@ -160,7 +174,9 @@ $(function () {
             }
           } else if (mutation.type === 'attributes') {
             if (logDOMchanges) {
-              console.log('The ' + mutation.attributeName + ' attribute was modified.')
+              console.log(
+                'The ' + mutation.attributeName + ' attribute was modified.',
+              )
             }
           }
         })

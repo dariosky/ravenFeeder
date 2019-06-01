@@ -1,13 +1,14 @@
 .issueHeader {
+	/* links to the issue */
 	display: flex;
 	padding: 5px;
 	position: relative;
 	height: 4em;
-	cursor: pointer; /* links to the issue */
+	cursor: pointer;
 }
 
 .issueHeader:hover .mark-all-as-read {
-	display: block
+	display: block;
 }
 
 .issueCommands {
@@ -16,7 +17,6 @@
 	right: 5px;
 	top: 0;
 	height: 100%;
-
 }
 
 .issueCommands .tpl-count-group {

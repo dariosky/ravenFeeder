@@ -4,8 +4,7 @@ Customize your feeder.co to help with [Jira](https://www.atlassian.com/software/
 
 Features:
 
-- Custom logo
-- group by Jira issue
-- mark the whole issue as
+- group by Jira issue and sort by date
+- mark the whole issue as read
 
 baked with love by Dario
