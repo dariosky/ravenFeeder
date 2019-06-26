@@ -1,6 +1,6 @@
 {
   "name": "Jira-Feeder integration",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Group Jira feeds by issue - for Feeder.co",
   "manifest_version": 2,
   "icons": {

@@ -62,7 +62,7 @@ $(function () {
       issueBlocks = [], // the list of blocks (Jira issues) as soon as they're foudn
       issueMaps = {} // map with the issue to the issueblock so we can insert in the block as we go
     let commentsCount = 0
-    console.log(`We have ${$listItems.length} posts`)
+    // console.log(`We have ${$listItems.length} posts`)
 
     $listItems.each((_, listItem) => {
       const $item = $(listItem),
@@ -89,7 +89,7 @@ $(function () {
         }
         issueMaps[issue].children.push($item)
         $item.removeClass('even odd') // after sorting zebra would be random
-        console.log(issue, title)
+        // console.log(issue, title)
       }
     })
     console.info(
@@ -192,5 +192,17 @@ $(function () {
   }
 
   initialize()
-  watchChanges()
+
+  function startObserving() {
+    const $watched = $('.consume-popup')
+    if ($watched.length) {
+      watchChanges()
+    } else {
+      console.debug("I'll watch for changes again soon")
+      setTimeout(startObserving, 500)
+    }
+  }
+
+  setTimeout(startObserving, 0)
+
 })
