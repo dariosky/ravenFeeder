@@ -15,7 +15,7 @@ $(function () {
   function goToFirstComment(e) {
     console.info('%cGo to first comment', colorStyles)
     const $issue = $(e.target).closest('.issue'),
-      $first = $issue.find('.item-title').first()
+      $first = $issue.find('.list-item').first()
     $first.click()
   }
 
@@ -34,7 +34,7 @@ $(function () {
       })
       .text('RavenPack Feed')
 
-    $('.MoreFeatures').remove()
+    $('.more-features--message').parent().remove()
 
     $('body')
       .on('click', '.issueHeader .mark-all-as-read', markAllAsRead)
@@ -51,30 +51,33 @@ $(function () {
     console.info('%cUpdating posts ****', colorStyles)
 
     // the bottom ad post is added all the time - then - remove it all the time
-    $('.popup-container').attr(
+    $('.consume-popup').attr(
       'style',
       'height: auto !important; width: 450px;',
     )
     $('#post-upgrade_post').remove()
 
-    const $listContainer = $('.tpl-post-list'),
+    const $listContainer = $('.page-scroll-container').first(),
       $listItems = $listContainer.find('.list-item'), // array of listItems
-      issueBlocks = [],
-      issueMaps = {}
+      issueBlocks = [], // the list of blocks (Jira issues) as soon as they're foudn
+      issueMaps = {} // map with the issue to the issueblock so we can insert in the block as we go
     let commentsCount = 0
+    console.log(`We have ${$listItems.length} posts`)
 
     $listItems.each((_, listItem) => {
-      const $listItem = $(listItem),
-        $item = $listItem.find('.item'),
+      const $item = $(listItem),
         $itemText = $item.find('.item-title--text'),
         text = $itemText.text(),
         issueGroups = text.match(/^RE: \[(.*)] (.*)/)
+      if ($item.data('post') === 'upgrade_post') {
+        $item.remove()
+        return
+      }
       if (issueGroups) {
         commentsCount++
         const [_, issue, title] = issueGroups
 
         $itemText.remove() // get rid of the title
-        $item.find('.item-sub-title').remove()
 
         if (!issueMaps[issue]) {
           issueMaps[issue] = {
@@ -84,9 +87,9 @@ $(function () {
           }
           issueBlocks.push(issueMaps[issue]) //keep the ordered list
         }
-        issueMaps[issue].children.push($listItem)
-        $listItem.removeClass('even odd') // after sorting zebra would be random
-        // console.log(issue, title)
+        issueMaps[issue].children.push($item)
+        $item.removeClass('even odd') // after sorting zebra would be random
+        console.log(issue, title)
       }
     })
     console.info(
@@ -114,7 +117,9 @@ $(function () {
                   $(
                     '<div class="issueCommands">' +
                     '  <div class="tpl-count-group">' +
-                    '    <div class="mark-as-read mark-all-as-read green-button--extra">' +
+                    '    <div class="mark-as-read mark-all-as-read green-button--extra"' +
+                    ' style="color:#69bb37; background-color: rgba(138,208,96,.2); margin-top:10px"' +
+                    '>' +
                     '      All read ✔' +
                     '    </div>' +
                     '  </div>' +
