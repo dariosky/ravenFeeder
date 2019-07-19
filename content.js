@@ -33,8 +33,7 @@ $(function () {
         'text-indent': '15px',
       })
       .text('RavenPack Feed')
-
-    $('.more-features--message').parent().remove()
+    removeAdv()
 
     $('body')
       .on('click', '.issueHeader .mark-all-as-read', markAllAsRead)
@@ -47,9 +46,14 @@ $(function () {
         })
   }
 
+  function removeAdv() {
+    $('.more-features--message').parent().remove()
+    $('.ad-container').remove()
+  }
+
   function updatePosts() {
     console.info('%cUpdating posts ****', colorStyles)
-
+    removeAdv()
     // the bottom ad post is added all the time - then - remove it all the time
     $('.consume-popup').attr(
       'style',
@@ -118,7 +122,7 @@ $(function () {
                     '<div class="issueCommands">' +
                     '  <div class="tpl-count-group">' +
                     '    <div class="mark-as-read mark-all-as-read green-button--extra"' +
-                    ' style="color:#69bb37; background-color: rgba(138,208,96,.2); margin-top:10px"' +
+                    ' style="color:#69bb37; background-color: #e8f6df; margin-top:10px"' +
                     '>' +
                     '      All read ✔' +
                     '    </div>' +
