@@ -61,7 +61,7 @@ $(function () {
     )
     $('#post-upgrade_post').remove()
 
-    const $listContainer = $('.page-scroll-container').first(),
+    const $listContainer = $('.page-scroll-container').last(),
       $listItems = $listContainer.find('.list-item'), // array of listItems
       issueBlocks = [], // the list of blocks (Jira issues) as soon as they're foudn
       issueMaps = {} // map with the issue to the issueblock so we can insert in the block as we go
