@@ -72,7 +72,7 @@ $(function () {
       const $item = $(listItem),
         $itemText = $item.find('.item-title--text'),
         text = $itemText.text(),
-        issueGroups = text.match(/^\s*RE: \[(.*)] (.*)/)
+        issueGroups = text.match(/^\s*RE: \[(.*?)] (.*)/)
       if ($item.data('post') === 'upgrade_post') {
         $item.remove()
         return
